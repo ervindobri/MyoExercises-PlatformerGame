@@ -19,7 +19,6 @@ public class GameplayManager : MonoBehaviour {
     public GameObject startButtonUi;
 
     private UnityEngine.UI.Button startButton;
-    private Text currentKey;
 
     public static bool levelStarted;
 
@@ -29,7 +28,6 @@ public class GameplayManager : MonoBehaviour {
     //TODO: pause game UI
     private void Awake()
     {
-        currentKey = GameObject.FindGameObjectWithTag("CurrentInput").GetComponent<Text>();
         levelStartUi.SetActive(true);
         levelCompletedUi.SetActive(false);
         levelStarted = false;
@@ -53,14 +51,7 @@ public class GameplayManager : MonoBehaviour {
         GameObject.Find("PointsCollected").GetComponent<Text>().text =
             GameObject.Find("PointsText").GetComponent<Text>().text;
     }
-    void OnGUI()
-    {
-        Event e = Event.current;
-        if (e.isKey)
-        {
-            currentKey.text = e.keyCode.ToString();
-        }
-    }
+    
 
     public void StartGame()
     {
@@ -75,6 +66,6 @@ public class GameplayManager : MonoBehaviour {
 
     public void RestartGame()
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex) ;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 }

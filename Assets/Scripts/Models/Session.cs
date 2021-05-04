@@ -6,14 +6,23 @@ namespace Models
 {
     public class Session
     {
-        public Session(Subject subject, [NotNull] Dictionary<Exercise, int> exercises)
+        public Session(){}
+        public Session(int reps, int pause)
         {
-            Subject = subject;
-            Exercises = exercises;
+            Reps = reps;
+            Pause = pause;
         }
 
-        private Subject Subject { get; set; }
-        [NotNull]
-        private Dictionary<Exercise, int> Exercises { get; set; }
+        public int Reps { get; set; }
+        public int Pause { get; set; }
+
+        public static Session FromSnapshot(Dictionary<string, object> sessionSnapshot)
+        {
+            return new Session()
+            {
+                Reps = int.Parse(sessionSnapshot["reps"].ToString()),
+                Pause = int.Parse(sessionSnapshot["pause"].ToString()),
+            };
+        }
     }
 }

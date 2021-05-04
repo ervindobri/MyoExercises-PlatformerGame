@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 public class MyoStatus : MonoBehaviour
 {
-    public ThalmicMyo thalmicMyo;
+    // public ThalmicMyo thalmicMyo;
     private SpriteRenderer sprite;
     private SpriteRenderer childSprite;
 
@@ -21,7 +21,7 @@ public class MyoStatus : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        sprite.color =  thalmicMyo.armSynced ? new Color(0,1,1,0.375f) : new Color(1,1,1,.5f);
-        childSprite.color = thalmicMyo.armSynced ? sprite.color : Color.white;
+        // sprite.color =  thalmicMyo.armSynced ? new Color(0,1,1,0.375f) : new Color(1,1,1,.5f);
+        // childSprite.color = thalmicMyo.armSynced ? sprite.color : Color.white;
     }
 }

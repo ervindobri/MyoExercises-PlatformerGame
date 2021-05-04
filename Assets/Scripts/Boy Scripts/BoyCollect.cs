@@ -35,27 +35,18 @@ public class BoyCollect : MonoBehaviour {
     {
         anim = GameObject.Find("Boy").GetComponent<Animator>();
         chestAnimators = new List<Animator>();
+        Debug.Log("Chests:" + chests.Length);
         for (int i = 0; i < chests.Length; i++)
         {
-            chests[i] = GameObject.Find("Chest-"+i);
-        }
-        
-        if ( chests.Length > 0)
-        {
-            for (int i = 0; i < chests.Length; i++)
-            {
-                chestAnimators.Add(chests[i].GetComponent<Animator>());
-                chestAnimators[i].enabled = false;
-            }
-        }
-        else
-        {
-            return;
+            chestAnimators.Add(chests[i].GetComponent<Animator>());
+            chestAnimators[i].enabled = false;
+            Debug.Log("Got animator!");
         }
     }
     //determine which chest gonna open
     public void FindChestAndOpenIt(string chestName)
     {
+        Debug.Log(chestName);
         if ( chests.Length > 0)
         {
             for (int i = 0; i < chests.Length; i++)
@@ -91,18 +82,18 @@ public class BoyCollect : MonoBehaviour {
     }
     private void OnTriggerEnter2D(Collider2D target)
     {
-        if (target.transform.tag == "Coin")
+        if (target.transform.CompareTag("Coin"))
         {
             points += 20;
             Destroy(target.gameObject);
             justCollected = true;
         }
-        if (target.transform.tag == "Chest")
+        if (target.transform.CompareTag("Chest"))
         {
             FindChestAndOpenIt(target.gameObject.name);
             
         }
-        if (target.transform.tag == "Door")
+        if (target.transform.CompareTag("Door"))
         {
             if ( CheckScore())
             {
@@ -116,11 +107,11 @@ public class BoyCollect : MonoBehaviour {
                 StopWatch.TimerButton();
                 SoundManager.instance.PlaySoundFx(levelClip, 0.3f);
 
-                Invoke("disableSoundFxManagers", 1);
+                Invoke("DisableSoundFxManagers", 1);
             }
         }
     }
-    void disableSoundFxManagers( )
+    void DisableSoundFxManagers( )
     {
         SoundManager.instance.soundFxManager.enabled = false;
         SoundManager.instance.soundFxManager2.enabled = false;

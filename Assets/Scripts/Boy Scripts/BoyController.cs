@@ -3,7 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using Thalmic.Myo;
 using UnityEngine;
-
+using UnityEngine.PlayerLoop;
+using UnityEngine.UI;
 using LockingPolicy = Thalmic.Myo.LockingPolicy;
 using Pose = Thalmic.Myo.Pose;
 using Quaternion = UnityEngine.Quaternion;
@@ -41,21 +42,26 @@ public class BoyController : MonoBehaviour {
     public KeyCode jump  = KeyCode.Space;
     
     
-    [Header("Myo")]
-    public GameObject myo = null;
-    private Pose _lastPose = Pose.Unknown;
+    // [Header("Myo")]
+    // public GameObject myo = null;
     private int magnitude;
-    private ThalmicMyo thalmicMyo;
+    // private ThalmicMyo thalmicMyo;
 
+    public Text lastKey;
+    private KeyCode currentKey;
 
     public static bool canMove = false;
+    private bool isFalling;
+
     private void Awake()
     {
         boy = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         player = GameObject.Find("Boy");
         // Access the ThalmicMyo component attached to the Myo object.
-        thalmicMyo = myo.GetComponent<ThalmicMyo>();
+        // thalmicMyo = myo.GetComponent<ThalmicMyo>();
+        lastKey = GameObject.FindGameObjectWithTag("CurrentInput").GetComponent<Text>();
+        isFalling = false;
     }
 
     // Update is called once per frame
@@ -63,128 +69,42 @@ public class BoyController : MonoBehaviour {
     {
         BoyMovement();
         CheckCollisionForJump();
-    }
-    // Extend the unlock if ThalmcHub's locking policy is standard, and notifies the given myo that a user action was
-    // recognized.
-    void ExtendUnlockAndNotifyUserAction(ThalmicMyo myo)
-    {
-        ThalmicHub hub = ThalmicHub.instance;
 
-        if (hub.lockingPolicy == LockingPolicy.Standard)
-        {
-            myo.Unlock(UnlockType.Timed);
-        }
-
-        myo.NotifyUserAction();
     }
+
     void RunningSound()
     {
         SoundManager.instance.PlaySoundFx(runClip, 0.1f);
     }
-    private void BoyMyoMovement()
+
+    
+    void OnGUI()
     {
-        //TODO: do this
-        if (thalmicMyo.pose != _lastPose)
+        Event e = Event.current;
+        if (e.isKey)
         {
-            _lastPose = thalmicMyo.pose;
-
-            if (thalmicMyo.pose == Pose.FingersSpread)
-            {
-                ExtendUnlockAndNotifyUserAction(thalmicMyo);
-                print("Pose ----   Fingers spread");
-            }
-            else if (thalmicMyo.pose == Pose.Fist)
-            {
-                print("Pose ----   Fist");
-                ExtendUnlockAndNotifyUserAction(thalmicMyo);
-            }
-            else if ( thalmicMyo.pose == Pose.DoubleTap)
-            {
-                print("Pose ----   Double tap");
-                ExtendUnlockAndNotifyUserAction(thalmicMyo);
-            }
-            else if ( thalmicMyo.pose == Pose.WaveIn)
-            {
-                print("Pose ----   Wave in");
-                ExtendUnlockAndNotifyUserAction(thalmicMyo);
-            }
-            else if ( thalmicMyo.pose == Pose.WaveOut)
-            {
-                print("Pose ----   Wave out");
-                ExtendUnlockAndNotifyUserAction(thalmicMyo);
-            }
-        }
-        if (thalmicMyo.xDirection == Thalmic.Myo.XDirection.TowardWrist)
-        {
-            // Mirror the rotation around the XZ plane in Unity's coordinate system (XY plane in Myo's coordinate
-            // system). This makes the rotation reflect the arm's orientation, rather than that of the Myo armband.
-            transform.rotation = new Quaternion(transform.localRotation.x,
-                                                -transform.localRotation.y,
-                                                transform.localRotation.z,
-                                                -transform.localRotation.w);
-        }
-        if (thalmicMyo.armSynced)
-        {
-            if (thalmicMyo.gyroscope.y < 0.33f)
-            {
-                moveInput = -1 * moveSpeed;
-            }
-            else
-            {
-                moveInput = 1 * moveSpeed;
-            }
-        }
-        else
-        {
-            Debug.Log("Arm not synced!");
-        }
-        if (!GameplayManager.doorOpen)
-        {
-            anim.SetFloat("Speed", Mathf.Abs(moveInput));
-
-        }
-        else
-        {
-            anim.SetFloat("Speed", 0);
-            boy.velocity = new Vector2(0, 0);
-            boy.constraints = RigidbodyConstraints2D.FreezeAll;
-        }
-
-        //Moving
-        boy.velocity = new Vector2(moveInput, boy.velocity.y);
-
-        jumpHeight = (thalmicMyo.gyroscope.magnitude/100);
-        //Jumping
-        if (Input.GetKeyUp(KeyCode.Space)  && !GameplayManager.doorOpen)
-        {
-            if (boy.velocity.y > 0)
-            {
-                boy.velocity = new Vector2(boy.velocity.x, boy.velocity.y * jumpHeight);
-            }
-        }
-        //Flipping horizontally
-        if (moveInput > 0 && !facingRight || moveInput < 0 && facingRight)
-        {
-            if (!GameplayManager.doorOpen)
-            {
-                Flip();
-            }
-        }
-        //Falling
-        if (boy.velocity.y < -1)
-        {
-            anim.SetBool("Fall", true);
-        }
-        else
-        {
-            anim.SetBool("Fall", false);
+            currentKey = e.keyCode;
         }
     }
-
+    
     private void BoyMovement()
     {
+        if (Input.GetKey(currentKey))
+        {
+            lastKey.text = currentKey + "held";
+        }
+        else if (Input.GetKeyDown(currentKey))
+        {
+            lastKey.text = currentKey.ToString();
+        }
+        else if (Input.GetKeyUp(currentKey))
+        {
+            lastKey.text = currentKey + "released";
+        }
+        
         if (canMove)
         {
+        
             // Flip player according to foot rotation
             // moveInput = thalmicMyo.transform.rotation.z < 0 ? -1 * moveSpeed : 1 * moveSpeed;
             // boy.velocity = new Vector2(boy.vel, boy.velocity.y);
@@ -214,16 +134,7 @@ public class BoyController : MonoBehaviour {
                 boy.velocity = new Vector2(0, 0);
                 boy.constraints = RigidbodyConstraints2D.FreezeAll;
             }
-
-        
-            //Jumping
-            // if (Input.GetKeyUp(jump)  && !GameplayManager.doorOpen)
-            // {
-            //     if (boy.velocity.y > 0)
-            //     {
-            //         boy.velocity = new Vector2(boy.velocity.x, boy.velocity.y * jumpHeight);
-            //     }
-            // }
+            
             //Flipping horizontally
             if (moveInput > 0 && !facingRight || moveInput < 0 && facingRight)
             {
@@ -236,9 +147,11 @@ public class BoyController : MonoBehaviour {
             if (boy.velocity.y < -1)
             {
                 anim.SetBool("Fall", true);
+                isFalling = true;
             }
             else
             {
+                isFalling = false;
                 anim.SetBool("Fall", false);
             }
         }
@@ -252,23 +165,41 @@ public class BoyController : MonoBehaviour {
         transform.localScale = transformScale;
     }
 
+    public void ResetFall()
+    {
+        anim.SetBool("Fall", false);
+    }
+    public void ResetJump()
+    {
+        anim.SetBool("Jump", false);
+    } 
     private void CheckCollisionForJump()
     {
         Collider2D bottomHit = Physics2D.OverlapBox(groundCheck.position, range, 0, groundLayer);
         if (bottomHit != null)
         {
-            if (bottomHit.gameObject.CompareTag("Ground") && Input.GetKeyDown(jump) && !anim.GetBool("Fall"))
+            if (Input.GetKeyDown(jump))
             {
-                // moveInput = facingRight ? 1*moveSpeed : -1 * moveSpeed;
-                boy.velocity = new Vector2( facingRight ?2.3f : -2.3f, jumpForce);
-                // boy.AddForce(new Vector2(boy.velocity.x, jumpForce));
-                // boy.AddTorque(boy.transform.right.y);
-                SoundManager.instance.PlaySoundFx(jumpClip, 0.1f);
-                anim.SetBool("Jump", true);
-            }
-            else
+                if (bottomHit.gameObject.CompareTag("Ground") && !anim.GetBool("Fall"))
+                {
+                    Debug.Log("JUmpiing!");
+                    // moveInput = facingRight ? 1*moveSpeed : -1 * moveSpeed;
+                    boy.velocity = new Vector2( facingRight ?2.3f : -2.3f, jumpForce);
+                    // boy.AddForce(new Vector2(boy.velocity.x, jumpForce));
+                    // boy.AddTorque(boy.transform.right.y);
+                    SoundManager.instance.PlaySoundFx(jumpClip, 0.1f);
+                    anim.SetBool("Jump", true);
+                }
+                Debug.Log(bottomHit.gameObject.CompareTag("Ground") + " and " + anim.GetBool("Fall"));
+            }    
+            
+
+        }
+        else
+        {
+            if (isFalling)
             {
-                anim.SetBool("Jump", false);
+                ResetJump();
             }
         }
     }

@@ -1,24 +1,39 @@
 ﻿using System;
-
+using System.Collections;
+using System.Collections.Generic;
 
 
 namespace Models
 {
-    public enum Sex
+    public class Patient
     {
-        Female, Male, Unspecified 
-    }
-    public class Subject
-    {
-        public Subject(string name, int age, Sex sex = Sex.Unspecified )
+        public static Patient FromSnapshot(Dictionary<string, object> snapshot)
+        {
+            Dictionary<string, object> exercises = new Dictionary<string, object>();
+            foreach (object item in (IEnumerable) snapshot["exercises"])
+            {
+                var x = item is KeyValuePair<string, object> ? (KeyValuePair<string, object>) item : default;
+                exercises.Add(x.Key, x.Value);
+            }
+            return new Patient()
+            {
+                Name = snapshot["name"].ToString(),
+                Age = int.Parse(snapshot["age"].ToString()),
+                Exercises = exercises 
+            };
+        }
+
+        public Patient(){}
+        public Patient(string name, int age, Dictionary<string, object> exercises)
         {
             Name = name;
             Age = age;
-            Sex = sex;
+            Exercises = exercises;
         }
 
-        private String Name { get; set; }
-        private int Age { get; set; }
-        private Sex Sex { get; set; }
+        public String Name { get; set; }
+        public int Age { get; set; }
+
+        public Dictionary<string, object> Exercises { get; set; }
     }
 }
